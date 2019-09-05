@@ -1,8 +1,20 @@
 function buildMetadata(sample) {
 
   // @TODO: Complete the following function that builds the metadata panel
-
+  var url = '/metadata/'+sample; 
   // Use `d3.json` to fetch the metadata for a sample
+  d3.json(url).then(function(response){
+    console.log(response);
+    sample_panel = d3.select('#sample-metadata');
+    sample_panel.html("");
+    
+    for (let [key, value] of Object.entries(response)){
+      sample_panel.append('p').text(`${key}: ${value}`);
+      // console.log(`${key}: ${value}`);
+    }
+  });
+
+  
     // Use d3 to select the panel with id of `#sample-metadata`
 
     // Use `.html("") to clear any existing metadata
@@ -18,7 +30,57 @@ function buildMetadata(sample) {
 function buildCharts(sample) {
 
   // @TODO: Use `d3.json` to fetch the sample data for the plots
+  var url = '/samples/'+sample; 
 
+  d3.json(url).then(function(response){
+    console.log(response);
+    response_values = response.sample_values.slice(0,10);
+    response_ids = response.otu_ids.slice(0,10);
+    response_labels = response.otu_labels.slice(0,10);
+
+    console.log(response_values, response_ids, response_labels);
+
+    // create pie chart
+
+    var trace1 = {
+      labels: response_ids,
+      values: response_values,
+      type: 'pie'
+    };
+
+    var layout = {
+      showlegend: true
+    };
+
+    data = [trace1]
+    Plotly.newPlot("pie", data, layout);
+
+    // create the bubble chart
+
+    var trace2 = {
+      x: response.otu_ids,
+      y: response.otu_values,
+      mode: 'markers',
+      marker: {
+        size: response.otu_values,
+        color: response.otu_ids,
+        colorscale: "Electric"
+      }
+    };
+
+    var layout2 = {
+      xaxis: {
+        title: {
+          text: 'OTU ID'
+        }
+      }
+    }
+
+    var data2 = [trace2];
+    Plotly.newPlot('bubble',data2,layout2);
+
+
+  });
     // @TODO: Build a Bubble Chart using the sample data
 
     // @TODO: Build a Pie Chart
@@ -31,7 +93,7 @@ function init() {
   var selector = d3.select("#selDataset");
 
   // Use the list of sample names to populate the select options
-  d3.json("/names").then((sampleNames) => {
+  d3.json("/names").then((sampleNames) => {  // promises - then, catch. if successful, .then, if not, .catch
     sampleNames.forEach((sample) => {
       selector
         .append("option")
